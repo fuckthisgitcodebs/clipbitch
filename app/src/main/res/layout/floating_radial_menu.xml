@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="460dp"
+    android:layout_height="460dp"
+    android:clipChildren="false">
+
+    <ImageButton android:id="@+id/btnShare"  android:layout_width="52dp" android:layout_height="52dp" android:layout_gravity="center" android:background="@drawable/circle_background" android:src="@drawable/ic_share" android:scaleType="center" android:visibility="gone" />
+    <ImageButton android:id="@+id/btnCopy"   android:layout_width="52dp" android:layout_height="52dp" android:layout_gravity="center" android:background="@drawable/circle_background" android:src="@drawable/ic_copy" android:scaleType="center" android:visibility="gone" />
+    <ImageButton android:id="@+id/btnAppend" android:layout_width="52dp" android:layout_height="52dp" android:layout_gravity="center" android:background="@drawable/circle_background" android:src="@drawable/ic_append" android:scaleType="center" android:visibility="gone" />
+    <ImageButton android:id="@+id/btnPaste"  android:layout_width="52dp" android:layout_height="52dp" android:layout_gravity="center" android:background="@drawable/circle_background" android:src="@drawable/ic_paste" android:scaleType="center" android:visibility="gone" />
+    <ImageButton android:id="@+id/btnTasker" android:layout_width="52dp" android:layout_height="52dp" android:layout_gravity="center" android:background="@drawable/circle_background" android:src="@drawable/ic_tasker" android:scaleType="center" android:visibility="gone" />
+
+    <ImageButton android:id="@+id/btnMain" android:layout_width="68dp" android:layout_height="68dp" android:layout_gravity="center" android:background="@drawable/circle_background" android:src="@drawable/ic_main_menu" android:scaleType="center" android:elevation="12dp" />
+
+</FrameLayout>

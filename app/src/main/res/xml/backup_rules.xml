@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- TODO: Use <include> to specify exactly which files or directories to include in the backup. -->
+</full-backup-content>

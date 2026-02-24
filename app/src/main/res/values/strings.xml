@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Text Command Overlay</string>
+    <string name="accessibility_service_description">Detects text selection and shows a floating orbiting command menu (Share, Copy, Append, Paste, Tasker).</string>
+</resources>
