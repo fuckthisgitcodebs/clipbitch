@@ -21,7 +21,7 @@ import android.animation.ValueAnimator
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.math.toRadians
+import java.lang.Math.toRadians 
 
 class TextCommandService : AccessibilityService() {
 
