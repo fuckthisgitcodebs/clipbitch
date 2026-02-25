@@ -18,10 +18,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
 import android.widget.Toast
 import android.animation.ValueAnimator
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
-import java.lang.Math.toRadians 
+import kotlin.math.*   // ← clean & idiomatic Kotlin (covers toRadians, cos, sin, abs)
 
 class TextCommandService : AccessibilityService() {
 
@@ -106,12 +103,12 @@ class TextCommandService : AccessibilityService() {
             PixelFormat.TRANSLUCENT
         )
 
-        updatePosition(selectionRect)
+        calculatePosition(selectionRect)   // set position BEFORE addView
         windowManager.addView(container, params)
         handler.postDelayed(autoHideRunnable, 20000)
     }
 
-    private fun updatePosition(rect: Rect) {
+    private fun calculatePosition(rect: Rect) {
         val density = resources.displayMetrics.density
         val half = (CONTAINER_SIZE_DP * density / 2).toInt()
 
@@ -123,7 +120,22 @@ class TextCommandService : AccessibilityService() {
 
         params?.x = x.coerceAtLeast(0)
         params?.y = y.coerceAtLeast(0)
-        container?.let { windowManager.updateViewLayout(it, params) }
+    }
+
+    private fun updatePosition(rect: Rect) {
+        if (container == null || params == null) return
+
+        calculatePosition(rect)
+
+        try {
+            windowManager.updateViewLayout(container, params)
+        } catch (e: IllegalArgumentException) {
+            if (e.message?.contains("not attached", ignoreCase = true) == true) {
+                Log.w(TAG, "View not yet attached to window manager – skipping update (race condition)")
+            } else {
+                throw e
+            }
+        }
     }
 
     private fun dpToPx(dp: Int) = (dp * resources.displayMetrics.density).toInt()
