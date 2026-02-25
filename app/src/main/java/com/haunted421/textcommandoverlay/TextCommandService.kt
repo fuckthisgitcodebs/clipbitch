@@ -18,7 +18,12 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
 import android.widget.Toast
 import android.animation.ValueAnimator
-import kotlin.math.*   // ← clean & idiomatic Kotlin (covers toRadians, cos, sin, abs)
+
+// Explicit imports — fixes the unresolved toRadians in CI (star import sometimes flakes)
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.toRadians
 
 class TextCommandService : AccessibilityService() {
 
