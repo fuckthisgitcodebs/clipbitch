@@ -19,12 +19,6 @@ import android.widget.ImageButton
 import android.widget.Toast
 import android.animation.ValueAnimator
 
-// Explicit imports — fixes the unresolved toRadians in CI (star import sometimes flakes)
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.toRadians
-
 class TextCommandService : AccessibilityService() {
 
     private lateinit var windowManager: WindowManager
@@ -108,7 +102,7 @@ class TextCommandService : AccessibilityService() {
             PixelFormat.TRANSLUCENT
         )
 
-        calculatePosition(selectionRect)   // set position BEFORE addView
+        calculatePosition(selectionRect)
         windowManager.addView(container, params)
         handler.postDelayed(autoHideRunnable, 20000)
     }
@@ -167,12 +161,14 @@ class TextCommandService : AccessibilityService() {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = event.rawX - initialTouchX
                     val dy = event.rawY - initialTouchY
-                    if (!dragThresholdPassed && (abs(dx) > 12 || abs(dy) > 12)) {
+                    if (!dragThresholdPassed && (Math.abs(dx) > 12 || Math.abs(dy) > 12)) {
                         dragThresholdPassed = true
                     }
-                    params?.x = (initialX + dx.toInt())
-                    params?.y = (initialY + dy.toInt())
-                    container?.let { windowManager.updateViewLayout(it, params) }
+                    if (params != null) {
+                        params!!.x = (initialX + dx.toInt())
+                        params!!.y = (initialY + dy.toInt())
+                        container?.let { windowManager.updateViewLayout(it, params!!) }
+                    }
                     true
                 }
                 MotionEvent.ACTION_UP -> {
@@ -230,9 +226,9 @@ class TextCommandService : AccessibilityService() {
                 addUpdateListener { anim ->
                     val frac = anim.animatedFraction
                     val angleDeg = targetDeg * frac
-                    val rad = toRadians(angleDeg.toDouble())
-                    btn.translationX = (radius * cos(rad)).toFloat()
-                    btn.translationY = (radius * sin(rad)).toFloat()
+                    val rad = Math.toRadians(angleDeg.toDouble())
+                    btn.translationX = (radius * Math.cos(rad)).toFloat()
+                    btn.translationY = (radius * Math.sin(rad)).toFloat()
                     btn.alpha = (frac * 1.3f).coerceAtMost(1f)
                     btn.scaleX = 0.6f + frac * 0.4f
                     btn.scaleY = btn.scaleX
