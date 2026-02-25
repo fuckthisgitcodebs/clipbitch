@@ -18,10 +18,6 @@ import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.ImageButton
 import android.widget.Toast
 import android.animation.ValueAnimator
-import kotlin.math.abs
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.toRadians
 
 class TextCommandService : AccessibilityService() {
 
@@ -54,10 +50,8 @@ class TextCommandService : AccessibilityService() {
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
         if (System.currentTimeMillis() < ignoreDeselectionUntil) return
 
-        // Broader events + universal node search for ANY selectable text
-        val source = event.source ?: rootInActiveWindow ?: return
-
-        val selectedNode = findSelectedNode(source) ?: return
+        val root = rootInActiveWindow ?: return
+        val selectedNode = findSelectedNode(root) ?: return
 
         currentPackage = event.packageName?.toString() ?: ""
         val start = selectedNode.textSelectionStart
@@ -74,10 +68,8 @@ class TextCommandService : AccessibilityService() {
             hideMenu()
         }
         selectedNode.recycle()
-        source.recycle()
     }
 
-    // Universal search for any node with active selection (editable OR static)
     private fun findSelectedNode(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
         val queue = ArrayDeque<AccessibilityNodeInfo>()
         queue.add(root)
@@ -125,7 +117,7 @@ class TextCommandService : AccessibilityService() {
 
         calculatePosition(selectionRect)
         windowManager.addView(container, params)
-        handler.postDelayed(autoHideRunnable, 15000) // tighter auto-hide
+        handler.postDelayed(autoHideRunnable, 15000)
     }
 
     private fun calculatePosition(rect: Rect) {
@@ -176,7 +168,7 @@ class TextCommandService : AccessibilityService() {
                 MotionEvent.ACTION_MOVE -> {
                     val dx = event.rawX - initialTouchX
                     val dy = event.rawY - initialTouchY
-                    if (!dragThresholdPassed && (abs(dx) > 12 || abs(dy) > 12)) dragThresholdPassed = true
+                    if (!dragThresholdPassed && (Math.abs(dx) > 12 || Math.abs(dy) > 12)) dragThresholdPassed = true
                     params?.x = (initialX + dx.toInt())
                     params?.y = (initialY + dy.toInt())
                     container?.let { windowManager.updateViewLayout(it, params) }
@@ -186,7 +178,7 @@ class TextCommandService : AccessibilityService() {
                     ignoreDeselectionUntil = System.currentTimeMillis() + 1200L
                     handler.postDelayed(autoHideRunnable, 15000)
                     if (!dragThresholdPassed) {
-                        toggleExpand()  // clean, dedicated tap
+                        toggleExpand()
                     }
                     true
                 }
@@ -207,17 +199,16 @@ class TextCommandService : AccessibilityService() {
         if (isExpanded) collapseMenu() else expandMenu()
     }
 
-    // ... (expandMenu, collapseMenu, collapseAndHide, hideMenu, actions unchanged from previous stable version — only detection + toggle + visuals updated)
-
     private fun expandMenu() {
         if (isExpanded) return
         isExpanded = true
 
         val density = resources.displayMetrics.density
         val radius = RADIUS_DP * density
-        val finalAngles = listOf(270f, 198f, 126f, 54f, 342f)
+        val finalAngles = listOf(270f, 198f, 126f, 54f, 342f) // exactly 5 angles for 5 buttons
 
         actionButtons.forEachIndexed { i, btn ->
+            if (i >= finalAngles.size) return@forEachIndexed // safety
             btn.visibility = View.VISIBLE
             btn.alpha = 0f
             btn.scaleX = 0.6f
@@ -232,9 +223,9 @@ class TextCommandService : AccessibilityService() {
                 addUpdateListener { anim ->
                     val frac = anim.animatedFraction
                     val angleDeg = targetDeg * frac
-                    val rad = toRadians(angleDeg.toDouble())
-                    btn.translationX = (radius * cos(rad)).toFloat()
-                    btn.translationY = (radius * sin(rad)).toFloat()
+                    val rad = Math.toRadians(angleDeg.toDouble())
+                    btn.translationX = (radius * Math.cos(rad)).toFloat()
+                    btn.translationY = (radius * Math.sin(rad)).toFloat()
                     btn.alpha = (frac * 1.3f).coerceAtMost(1f)
                     btn.scaleX = 0.6f + frac * 0.4f
                     btn.scaleY = btn.scaleX
@@ -242,7 +233,7 @@ class TextCommandService : AccessibilityService() {
                 start()
             }
         }
-        // Main button stays stable size during expand (no conflicting scale)
+        // Main button stays stable size (no conflicting scale)
     }
 
     private fun collapseMenu() {
@@ -275,13 +266,44 @@ class TextCommandService : AccessibilityService() {
         handler.removeCallbacks(autoHideRunnable)
     }
 
-    // (shareText, copyText, appendCopy, pasteHere, sendToTasker, onInterrupt, onDestroy unchanged — full stable versions from before)
+    private fun shareText() {
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, currentText)
+        }
+        startActivity(Intent.createChooser(intent, "Share").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
 
-    private fun shareText() { ... } // same as previous
-    private fun copyText() { ... }
-    private fun appendCopy() { ... }
-    private fun pasteHere() { ... }
-    private fun sendToTasker() { ... }
+    private fun copyText() {
+        val cm = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        cm.setPrimaryClip(ClipData.newPlainText("TextCommand", currentText))
+        Toast.makeText(this, "Copied ✓", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun appendCopy() {
+        val cm = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+        val existing = cm.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+        val newText = if (existing.isEmpty()) currentText else "$existing\n\n$currentText"
+        cm.setPrimaryClip(ClipData.newPlainText("TextCommand", newText))
+        Toast.makeText(this, "Appended ✓", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun pasteHere() {
+        val node = rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_INPUT)
+            ?: rootInActiveWindow?.findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY)
+        if (node?.isEditable == true) node.performAction(AccessibilityNodeInfo.ACTION_PASTE)
+        else Toast.makeText(this, "No editable field", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun sendToTasker() {
+        val intent = Intent("com.haunted421.textcommand.TEXT_SELECTED").apply {
+            putExtra("text", currentText)
+            putExtra("source_package", currentPackage)
+            putExtra("timestamp", System.currentTimeMillis())
+        }
+        sendBroadcast(intent)
+        Toast.makeText(this, "Sent to Tasker ✓", Toast.LENGTH_SHORT).show()
+    }
 
     override fun onInterrupt() = hideMenu()
     override fun onDestroy() = hideMenu()
