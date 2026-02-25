@@ -205,10 +205,10 @@ class TextCommandService : AccessibilityService() {
 
         val density = resources.displayMetrics.density
         val radius = RADIUS_DP * density
-        val finalAngles = listOf(270f, 198f, 126f, 54f, 342f) // exactly 5 angles for 5 buttons
+        val finalAngles = listOf(270f, 198f, 126f, 54f, 342f)
 
         actionButtons.forEachIndexed { i, btn ->
-            if (i >= finalAngles.size) return@forEachIndexed // safety
+            if (i >= finalAngles.size) return@forEachIndexed
             btn.visibility = View.VISIBLE
             btn.alpha = 0f
             btn.scaleX = 0.6f
@@ -233,7 +233,6 @@ class TextCommandService : AccessibilityService() {
                 start()
             }
         }
-        // Main button stays stable size (no conflicting scale)
     }
 
     private fun collapseMenu() {
